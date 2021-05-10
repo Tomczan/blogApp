@@ -3,9 +3,12 @@
 {% block title %}{{ post.title }}{% endblock %}
 
 {% block content %}
-	<h1>{{ post.title }}</h1>
-	<p class="date">
-		Opublikowany {{ post.publish }} przez {{ post.author }}
-	</p>
-	{{ post.body|linebreaks }}
+<h1>{{ post.title }}</h1>
+<p class="date">
+	Opublikowany {{ post.publish }} przez {{ post.author }}
+</p>
+{{ post.body|linebreaks }}
+<p>
+<a href="{% url 'blogApp:post_share' post.id %}">Udostepnij post</a>
+</p>
 {% endblock %}
