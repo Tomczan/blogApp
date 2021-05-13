@@ -2,16 +2,23 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.mail import send_mail
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView
-from .models import Post
-from .forms import EmailPostForm
+from .models import Post, Comment
+from .forms import EmailPostForm, CommentForm
+from taggit.models import Tag
 
 
 # Create your views here.
 
 
-def post_list(request):
+def post_list(request, tag_slug=None):
     posts = Post.published.all()
     object_list = Post.published.all()
+    tag = None
+
+    if tag_slug:
+        tag = get_object_or_404(Tag, slug=tag_slug)
+        object_list = object_list.filter(tags__in=[tag])
+
     paginator = Paginator(object_list, 3)
     page = request.GET.get('page')
     try:
@@ -23,7 +30,8 @@ def post_list(request):
     return render(request,
                   'blogApp/post/list.html',
                   {'page': page,
-                   'posts': posts})
+                   'posts': posts,
+                   'tag': tag})
 
 
 class PostListView(ListView):
@@ -39,9 +47,22 @@ def post_detail(request, year, month, day, post):
                              publish__year=year,
                              publish__month=month,
                              publish__day=day)
+
+    comments = post.comments.filter(active=True)
+
+    if request.method == 'POST':
+        comment_form = CommentForm(data=request.POST)
+        if comment_form.is_valid():
+            new_comment = comment_form.save(commit=False)
+            new_comment.post = post
+            new_comment.save()
+    else:
+        comment_form = CommentForm()
     return render(request,
                   'blogApp/post/details.html',
-                  {'post': post})
+                  {'post': post,
+                   'comments': comments,
+                   'comment_form': comment_form})
 
 
 def post_share(request, post_id):
@@ -53,8 +74,10 @@ def post_share(request, post_id):
         if form.is_valid():
             clean_data = form.cleaned_data
             post_url = request.build_absolute_uri(post.get_absolute_url())
-            subject = '{} ({}) zachęca do przeczytania "{}"'.format(clean_data['name'], clean_data['email'], post.title)
-            message = 'Przeczytaj post "{}" na stronie {}\n\n Komentarz dodany przez {}: {}'.format(post.title, post_url, clean_data['name'], clean_data['comments'])
+            subject = '{} ({}) zachęca do przeczytania "{}"'.format(
+                clean_data['name'], clean_data['email'], post.title)
+            message = 'Przeczytaj post "{}" na stronie {}\n\n Komentarz dodany przez {}: {}'.format(
+                post.title, post_url, clean_data['name'], clean_data['comments'])
             send_mail(subject, message, 'admin@myblog.com', [clean_data['to']])
             sent = True
     else:
