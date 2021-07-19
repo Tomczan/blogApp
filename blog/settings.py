@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from decouple import config
 
 SITE_ID = 1
 
@@ -81,8 +83,12 @@ WSGI_APPLICATION = 'blog.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'blog',
+        'USER': config('db_local_user'),
+        'PASSWORD': config('db_local_password'),
+        'HOST': 'localhost',
+        'PORT': '5432'
     }
 }
 

@@ -7,4 +7,5 @@ db.sqlite3
 media
 manage.py
 blogApp/migrations/*.py
+.env
 
