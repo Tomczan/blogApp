@@ -7,7 +7,11 @@
 
 {% if query %}
 <h1>Posty zawierające "{{ query }}"</h1>
-<h3>Znalezniono {{ total_results }} wynik {{ total_results|pluralize:"i" }}</h3>
+<h3>
+    {% with results.count as total_results %}
+    Znalezniono {{ total_results }} wynik{{ total_results|pluralize:"i" }}
+    {% endwith %}
+</h3>
 {% for post in results %}
 <h4><a href="{{ post.get_absolute_url }}">{{post.title }}</a></h4>
 <p>{{ post.body|markdown|truncatewords_html:5 }}</p>
